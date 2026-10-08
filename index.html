@@ -1,0 +1,2152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#075E54" />
+<title>Desafio do Atendimento | Simulador de WhatsApp para Restaurantes</title>
+<style>
+/* ============================================================
+   VARIÁVEIS E RESET
+   ============================================================ */
+:root{
+  --verde:#25D366;
+  --verde-escuro:#128C7E;
+  --verde-muito-escuro:#075E54;
+  --fundo:#F5F7F8;
+  --branco:#FFFFFF;
+  --texto:#1F2937;
+  --texto-suave:#6B7280;
+  --cinza-borda:#E5E7EB;
+  --cinza-bg:#F0F2F5;
+  --balão-cliente:#FFFFFF;
+  --balão-atendente:#DCF8C6;
+  --vermelho:#DC2626;
+  --vermelho-suave:#FEF2F2;
+  --amarelo:#B45309;
+  --amarelo-suave:#FFFBEB;
+  --azul:#2563EB;
+  --sombra:0 1px 3px rgba(15,23,42,.08), 0 8px 24px rgba(15,23,42,.06);
+  --raio:16px;
+}
+*,*::before,*::after{box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--fundo);
+  color:var(--texto);
+  font-size:15px;
+  line-height:1.5;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+h1,h2,h3,h4{margin:0;line-height:1.22;font-weight:800;letter-spacing:-.01em;}
+p{margin:0 0 10px;}
+p:last-child{margin-bottom:0;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+ul{list-style:none;margin:0;padding:0;}
+
+.tela{display:none;}
+.tela.ativa{display:block;animation:fade .3s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.oculto{display:none !important;}
+
+/* ============================================================
+   TELA INICIAL
+   ============================================================ */
+.intro-wrap{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px 18px;
+  background:
+    radial-gradient(900px 500px at 100% -10%, rgba(37,211,102,.18), transparent 60%),
+    radial-gradient(700px 420px at -10% 20%, rgba(18,140,126,.16), transparent 60%),
+    linear-gradient(160deg,#075E54 0%,#0d7a6c 55%,#128C7E 100%);
+}
+.intro-card{
+  background:#fff;
+  border-radius:24px;
+  padding:30px 26px 28px;
+  max-width:560px;
+  width:100%;
+  box-shadow:0 24px 64px rgba(7,94,84,.35);
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.intro-card::before{
+  content:"";
+  position:absolute;
+  top:0;left:0;right:0;height:6px;
+  background:linear-gradient(90deg,#25D366,#128C7E,#075E54);
+}
+.intro-badge{
+  display:inline-block;
+  padding:5px 13px;
+  border-radius:999px;
+  background:#ECFDF5;
+  color:var(--verde-escuro);
+  border:1px solid #A7F3D0;
+  font-size:.7rem;
+  font-weight:800;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  margin-bottom:16px;
+}
+.intro-titulo{
+  font-size:clamp(1.5rem,5vw,2rem);
+  color:var(--verde-muito-escuro);
+  margin-bottom:8px;
+}
+.intro-sub{
+  font-size:1rem;
+  color:var(--texto-suave);
+  margin-bottom:24px;
+  font-weight:600;
+}
+.intro-divisor{
+  height:1px;
+  background:var(--cinza-borda);
+  margin:20px auto;
+  max-width:120px;
+}
+.intro-texto{
+  text-align:left;
+  background:#F8FAFB;
+  border-left:4px solid var(--verde);
+  border-radius:12px;
+  padding:16px 18px;
+  font-size:.94rem;
+  color:#334155;
+  margin-bottom:22px;
+}
+.intro-texto p{margin-bottom:10px;}
+.intro-texto p:last-child{margin-bottom:0;}
+.intro-texto strong{color:var(--verde-muito-escuro);}
+.intro-btn{
+  width:100%;
+  padding:16px 20px;
+  border-radius:14px;
+  background:linear-gradient(135deg,#25D366,#128C7E);
+  color:#fff;
+  font-size:1rem;
+  font-weight:800;
+  letter-spacing:.02em;
+  box-shadow:0 8px 22px rgba(18,140,126,.32);
+  transition:transform .12s,box-shadow .18s;
+}
+.intro-btn:hover{box-shadow:0 12px 30px rgba(18,140,126,.42);}
+.intro-btn:active{transform:translateY(1px);}
+.intro-rodape{
+  font-size:.78rem;
+  color:var(--texto-suave);
+  margin-top:14px;
+  line-height:1.5;
+}
+
+/* ============================================================
+   TOPBAR / INDICADORES
+   ============================================================ */
+.app{
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+  background:var(--fundo);
+}
+.topbar{
+  background:linear-gradient(140deg,#075E54 0%,#0d7a6c 60%,#128C7E 100%);
+  color:#fff;
+  padding:14px 16px;
+  box-shadow:0 2px 14px rgba(7,94,84,.22);
+  position:sticky;
+  top:0;
+  z-index:20;
+}
+.topbar-linha{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.marca{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.marca-icone{
+  width:38px;
+  height:38px;
+  border-radius:11px;
+  background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.28);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.15rem;
+  flex-shrink:0;
+}
+.marca-txt h1{
+  font-size:.92rem;
+  font-weight:800;
+  letter-spacing:.02em;
+}
+.marca-txt p{
+  font-size:.68rem;
+  opacity:.86;
+  margin:1px 0 0;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  font-weight:600;
+}
+.receita{
+  background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.24);
+  border-radius:11px;
+  padding:6px 12px;
+  text-align:right;
+  line-height:1.15;
+}
+.receita span{
+  display:block;
+  font-size:.62rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  opacity:.84;
+  font-weight:700;
+}
+.receita strong{
+  font-size:1.02rem;
+  font-weight:800;
+  color:#D1FAE5;
+}
+
+.indicadores{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+}
+.indicador{
+  background:rgba(255,255,255,.11);
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:11px;
+  padding:7px 8px;
+  transition:background .3s,border-color .3s;
+  min-width:0;
+}
+.indicador.pulso{
+  background:rgba(37,211,102,.28);
+  border-color:rgba(37,211,102,.6);
+}
+.indicador-topo{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  margin-bottom:5px;
+}
+.indicador-icone{font-size:.85rem;line-height:1;}
+.indicador-nome{
+  font-size:.6rem;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  opacity:.92;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.indicador-valor{
+  font-size:.95rem;
+  font-weight:800;
+  line-height:1;
+  color:#fff;
+}
+.indicador-barra{
+  height:4px;
+  background:rgba(0,0,0,.22);
+  border-radius:99px;
+  overflow:hidden;
+  margin-top:6px;
+}
+.indicador-barra-fill{
+  height:100%;
+  background:linear-gradient(90deg,#6EE7B7,#25D366);
+  border-radius:99px;
+  width:0;
+  transition:width .55s ease;
+}
+
+/* ============================================================
+   CONTEÚDO PRINCIPAL
+   ============================================================ */
+.conteudo{
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  min-height:0;
+}
+
+/* ---------- SIDEBAR DE CLIENTES ---------- */
+.sidebar{
+  order:2;
+  background:#fff;
+  border-top:1px solid var(--cinza-borda);
+  padding:12px 12px 16px;
+}
+.sidebar-titulo{
+  font-size:.68rem;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--texto-suave);
+  margin-bottom:10px;
+  padding:0 4px;
+}
+.clientes-lista{
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+  padding-bottom:4px;
+  scrollbar-width:none;
+}
+.clientes-lista::-webkit-scrollbar{display:none;}
+.cliente{
+  flex:0 0 200px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  padding:10px 12px;
+  border-radius:13px;
+  border:1px solid var(--cinza-borda);
+  background:#FAFBFC;
+  text-align:left;
+  transition:background .2s,border-color .2s;
+  position:relative;
+}
+.cliente.ativo{
+  background:#ECFDF5;
+  border-color:#A7F3D0;
+}
+.cliente.concluido{
+  opacity:.65;
+}
+.cliente-avatar{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-weight:800;
+  font-size:.82rem;
+  flex-shrink:0;
+  position:relative;
+}
+.cliente-avatar::after{
+  content:"";
+  position:absolute;
+  width:10px;height:10px;border-radius:50%;
+  background:var(--verde);
+  border:2px solid #fff;
+  right:-1px;bottom:-1px;
+}
+.cliente.concluido .cliente-avatar::after{
+  background:#9CA3AF;
+}
+.cliente-info{
+  min-width:0;
+  flex:1;
+}
+.cliente-nome{
+  font-weight:800;
+  font-size:.85rem;
+  color:var(--texto);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.cliente-preview{
+  font-size:.72rem;
+  color:var(--texto-suave);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  margin-top:2px;
+}
+.cliente-check{
+  color:var(--verde-escuro);
+  font-size:1rem;
+  flex-shrink:0;
+}
+
+/* ---------- CHAT ---------- */
+.chat-panel{
+  order:1;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  background:#E8EAED;
+  background-image:
+    radial-gradient(rgba(255,255,255,.5) 1px, transparent 1px),
+    radial-gradient(rgba(255,255,255,.5) 1px, transparent 1px);
+  background-size:28px 28px;
+  background-position:0 0, 14px 14px;
+  position:relative;
+}
+
+.chat-header{
+  background:#fff;
+  border-bottom:1px solid var(--cinza-borda);
+  padding:10px 14px;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  box-shadow:0 1px 4px rgba(15,23,42,.05);
+  z-index:5;
+}
+.chat-header-avatar{
+  width:40px;height:40px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:800;font-size:.86rem;
+  flex-shrink:0;
+}
+.chat-header-info{min-width:0;flex:1;}
+.chat-header-nome{
+  font-weight:800;
+  font-size:.94rem;
+  color:var(--texto);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.chat-header-status{
+  font-size:.72rem;
+  color:var(--verde-escuro);
+  font-weight:600;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  margin-top:1px;
+}
+.chat-header-status::before{
+  content:"";
+  width:7px;height:7px;border-radius:50%;
+  background:var(--verde);
+  box-shadow:0 0 0 2px rgba(37,211,102,.25);
+}
+.chat-header-acoes{
+  font-size:1.1rem;
+  color:#9CA3AF;
+  letter-spacing:3px;
+  user-select:none;
+}
+
+.chat-mensagens{
+  flex:1;
+  overflow-y:auto;
+  padding:16px 14px 8px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  scroll-behavior:smooth;
+  min-height:280px;
+}
+.chat-mensagens::-webkit-scrollbar{width:6px;}
+.chat-mensagens::-webkit-scrollbar-thumb{background:rgba(0,0,0,.16);border-radius:99px;}
+
+.divisor-data{
+  align-self:center;
+  background:rgba(255,255,255,.85);
+  color:#475569;
+  font-size:.68rem;
+  font-weight:700;
+  letter-spacing:.05em;
+  padding:3px 12px;
+  border-radius:99px;
+  box-shadow:0 1px 2px rgba(15,23,42,.06);
+  margin:4px 0 6px;
+  text-transform:uppercase;
+}
+
+.msg{
+  max-width:82%;
+  padding:9px 13px 6px;
+  border-radius:14px;
+  font-size:.92rem;
+  line-height:1.42;
+  word-wrap:break-word;
+  overflow-wrap:break-word;
+  position:relative;
+  box-shadow:0 1px 1px rgba(15,23,42,.08);
+  animation:msg-in .28s ease;
+}
+@keyframes msg-in{
+  from{opacity:0;transform:translateY(6px) scale(.98);}
+  to{opacity:1;transform:none;}
+}
+.msg-cliente{
+  align-self:flex-start;
+  background:var(--balão-cliente);
+  color:var(--texto);
+  border-top-left-radius:4px;
+}
+.msg-atendente{
+  align-self:flex-end;
+  background:var(--balão-atendente);
+  color:#0F172A;
+  border-top-right-radius:4px;
+}
+.msg-hora{
+  display:block;
+  font-size:.62rem;
+  color:#94A3B8;
+  text-align:right;
+  margin-top:3px;
+  font-weight:600;
+}
+
+/* mensagens de sistema / feedback */
+.msg-sistema{
+  align-self:center;
+  max-width:96%;
+  padding:11px 15px;
+  border-radius:12px;
+  font-size:.85rem;
+  line-height:1.45;
+  box-shadow:0 2px 8px rgba(15,23,42,.08);
+  animation:msg-in .3s ease;
+  border-left:4px solid;
+}
+.msg-sistema .rotulo-sistema{
+  display:block;
+  font-size:.62rem;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  margin-bottom:5px;
+}
+.msg-sistema.insight{
+  background:#ECFDF5;
+  color:#065F46;
+  border-color:var(--verde);
+}
+.msg-sistema.insight .rotulo-sistema{color:var(--verde-escuro);}
+.msg-sistema.atencao{
+  background:var(--amarelo-suave);
+  color:#78350F;
+  border-color:#F59E0B;
+}
+.msg-sistema.atencao .rotulo-sistema{color:var(--amarelo);}
+.msg-sistema.perdida{
+  background:var(--vermelho-suave);
+  color:#7F1D1D;
+  border-color:var(--vermelho);
+}
+.msg-sistema.perdida .rotulo-sistema{color:var(--vermelho);}
+.msg-sistema.receita{
+  background:#EFF6FF;
+  color:#1E3A8A;
+  border-color:var(--azul);
+}
+.msg-sistema.receita .rotulo-sistema{color:var(--azul);}
+
+/* digitando */
+.msg-digitando{
+  align-self:flex-start;
+  background:var(--balão-cliente);
+  border-top-left-radius:4px;
+  padding:12px 16px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  gap:4px;
+  box-shadow:0 1px 1px rgba(15,23,42,.08);
+  animation:msg-in .25s ease;
+}
+.msg-digitando span{
+  width:7px;height:7px;border-radius:50%;
+  background:#9CA3AF;
+  animation:blink 1.3s infinite;
+}
+.msg-digitando span:nth-child(2){animation-delay:.18s;}
+.msg-digitando span:nth-child(3){animation-delay:.36s;}
+@keyframes blink{
+  0%,60%,100%{opacity:.35;transform:translateY(0);}
+  30%{opacity:1;transform:translateY(-3px);}
+}
+
+/* ---------- ÁREA DE OPÇÕES ---------- */
+.opcoes-area{
+  background:#fff;
+  border-top:1px solid var(--cinza-borda);
+  padding:14px 14px 16px;
+  box-shadow:0 -2px 12px rgba(15,23,42,.06);
+}
+.opcoes-rotulo{
+  font-size:.68rem;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--verde-escuro);
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+.opcoes-rotulo::before{
+  content:"";
+  width:8px;height:8px;border-radius:50%;
+  background:var(--verde);
+  box-shadow:0 0 0 3px rgba(37,211,102,.2);
+  animation:pulsar 1.6s infinite;
+}
+@keyframes pulsar{
+  0%,100%{box-shadow:0 0 0 3px rgba(37,211,102,.2);}
+  50%{box-shadow:0 0 0 6px rgba(37,211,102,.08);}
+}
+.opcoes-lista{
+  display:grid;
+  gap:8px;
+}
+.opcao{
+  display:flex;
+  gap:11px;
+  align-items:flex-start;
+  width:100%;
+  padding:12px 14px;
+  background:#FAFBFC;
+  border:2px solid var(--cinza-borda);
+  border-radius:13px;
+  font-size:.92rem;
+  line-height:1.42;
+  color:var(--texto);
+  text-align:left;
+  transition:border-color .15s,background .15s,transform .1s,box-shadow .15s;
+  min-height:52px;
+}
+.opcao:hover:not(:disabled){
+  border-color:var(--verde);
+  background:#F0FDF4;
+  transform:translateY(-1px);
+  box-shadow:0 4px 12px rgba(18,140,126,.12);
+}
+.opcao:active:not(:disabled){transform:translateY(0);}
+.opcao:disabled{opacity:.55;cursor:not-allowed;}
+.opcao-letra{
+  flex:0 0 26px;
+  height:26px;
+  border-radius:50%;
+  background:#E5E7EB;
+  color:var(--verde-escuro);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  font-size:.8rem;
+  transition:background .15s,color .15s;
+  margin-top:1px;
+}
+.opcao:hover:not(:disabled) .opcao-letra{
+  background:var(--verde);
+  color:#fff;
+}
+.opcao-txt{flex:1;}
+
+/* ============================================================
+   TELA DE RESULTADO
+   ============================================================ */
+.resultado-wrap{
+  min-height:100vh;
+  padding:24px 16px 60px;
+  background:
+    radial-gradient(800px 500px at 100% -10%, rgba(37,211,102,.16), transparent 60%),
+    radial-gradient(700px 500px at -10% 100%, rgba(18,140,126,.14), transparent 60%),
+    var(--fundo);
+}
+.resultado-card{
+  max-width:760px;
+  margin:0 auto;
+  background:#fff;
+  border-radius:22px;
+  padding:28px 22px 24px;
+  box-shadow:var(--sombra);
+  text-align:center;
+  border:1px solid rgba(15,23,42,.04);
+}
+.resultado-medalha{
+  font-size:3.4rem;
+  line-height:1;
+  margin-bottom:8px;
+}
+.resultado-titulo{
+  font-size:clamp(1.2rem,4vw,1.55rem);
+  color:var(--verde-muito-escuro);
+  margin-bottom:6px;
+}
+.resultado-sub{
+  font-size:.9rem;
+  color:var(--texto-suave);
+  margin-bottom:22px;
+}
+.resultado-receita{
+  display:inline-block;
+  padding:14px 24px;
+  background:linear-gradient(135deg,#ECFDF5,#D1FAE5);
+  border:1px solid #A7F3D0;
+  border-radius:16px;
+  margin-bottom:22px;
+}
+.resultado-receita span{
+  display:block;
+  font-size:.68rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--verde-escuro);
+  font-weight:800;
+  margin-bottom:4px;
+}
+.resultado-receita strong{
+  font-size:1.85rem;
+  font-weight:800;
+  color:var(--verde-muito-escuro);
+  letter-spacing:-.02em;
+}
+.indicadores-final{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  margin-bottom:22px;
+  text-align:left;
+}
+.indicador-final{
+  background:#F8FAFB;
+  border:1px solid var(--cinza-borda);
+  border-radius:13px;
+  padding:12px 14px;
+}
+.indicador-final-topo{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:7px;
+}
+.indicador-final-nome{
+  font-size:.78rem;
+  font-weight:800;
+  color:var(--texto);
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.indicador-final-valor{
+  font-size:.95rem;
+  font-weight:800;
+  color:var(--verde-escuro);
+}
+.indicador-final-barra{
+  height:6px;
+  background:#E5E7EB;
+  border-radius:99px;
+  overflow:hidden;
+}
+.indicador-final-fill{
+  height:100%;
+  border-radius:99px;
+  width:0;
+  transition:width .8s ease;
+  background:linear-gradient(90deg,#25D366,#128C7E);
+}
+.indicador-final.baixo .indicador-final-fill{background:linear-gradient(90deg,#F87171,#DC2626);}
+.indicador-final.medio .indicador-final-fill{background:linear-gradient(90deg,#FBBF24,#F59E0B);}
+
+.dicas-titulo{
+  font-size:.72rem;
+  font-weight:800;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--verde-escuro);
+  text-align:left;
+  margin:4px 0 10px;
+}
+.dicas-lista{
+  display:grid;
+  gap:8px;
+  text-align:left;
+  margin-bottom:22px;
+}
+.dicas-lista li{
+  background:#F8FAFB;
+  border-left:4px solid var(--verde);
+  border-radius:10px;
+  padding:11px 14px;
+  font-size:.88rem;
+  line-height:1.48;
+  color:#334155;
+}
+.botoes-finais{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+.btn-final{
+  padding:13px 22px;
+  border-radius:13px;
+  font-weight:800;
+  font-size:.92rem;
+  min-width:160px;
+  transition:transform .1s,box-shadow .18s,background .18s;
+}
+.btn-final:active{transform:translateY(1px);}
+.btn-final-primario{
+  background:linear-gradient(135deg,#25D366,#128C7E);
+  color:#fff;
+  box-shadow:0 6px 18px rgba(18,140,126,.28);
+}
+.btn-final-secundario{
+  background:#fff;
+  color:var(--verde-escuro);
+  border:2px solid #CDE9E3;
+}
+
+/* ============================================================
+   RESPONSIVIDADE
+   ============================================================ */
+@media (min-width:600px){
+  .topbar{padding:16px 22px;}
+  .indicadores{gap:10px;}
+  .indicador{padding:9px 12px;}
+  .indicador-valor{font-size:1.1rem;}
+  .indicador-nome{font-size:.65rem;}
+  .chat-mensagens{padding:20px 22px 10px;}
+  .msg{max-width:72%;font-size:.95rem;}
+  .opcoes-area{padding:16px 22px 20px;}
+  .opcoes-lista{grid-template-columns:1fr 1fr;}
+  .opcao{font-size:.94rem;}
+  .indicadores-final{grid-template-columns:repeat(4,1fr);}
+  .resultado-card{padding:36px 32px 32px;}
+}
+
+@media (min-width:900px){
+  .app{height:100vh;overflow:hidden;}
+  .topbar{position:relative;padding:14px 24px;}
+  .conteudo{
+    flex-direction:row;
+    flex:1;
+    min-height:0;
+    padding:14px 24px 18px;
+    gap:16px;
+    background:var(--fundo);
+    overflow:hidden;
+  }
+  .sidebar{
+    order:0;
+    width:270px;
+    flex-shrink:0;
+    border:1px solid var(--cinza-borda);
+    border-radius:18px;
+    box-shadow:var(--sombra);
+    padding:16px 14px;
+    background:#fff;
+    overflow-y:auto;
+    align-self:stretch;
+  }
+  .clientes-lista{
+    flex-direction:column;
+    overflow-x:visible;
+    overflow-y:auto;
+  }
+  .cliente{flex:1 0 auto;width:100%;}
+  .chat-panel{
+    order:0;
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:var(--sombra);
+    border:1px solid var(--cinza-borda);
+  }
+  .chat-header{padding:12px 18px;}
+  .chat-mensagens{min-height:0;flex:1;}
+  .opcoes-area{padding:16px 20px 20px;}
+}
+
+@media (min-width:1200px){
+  .topbar{padding:16px 34px;}
+  .conteudo{padding:16px 34px 22px;}
+  .sidebar{width:300px;}
+  .indicador-valor{font-size:1.18rem;}
+}
+
+/* ============================================================
+   PRINT
+   ============================================================ */
+@media print{
+  body{background:#fff;}
+  .topbar,.opcoes-area,.chat-header,.botoes-finais{display:none !important;}
+  .chat-panel{box-shadow:none;border:1px solid #DDD;}
+  .resultado-card{box-shadow:none;border:1px solid #DDD;}
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     TELA INICIAL
+     ============================================================ -->
+<section id="tela-intro" class="tela ativa">
+  <div class="intro-wrap">
+    <div class="intro-card">
+      <span class="intro-badge">Simulador de Atendimento</span>
+      <h1 class="intro-titulo">Desafio do Atendimento</h1>
+      <p class="intro-sub">Transforme conversas em boas experiências e oportunidades de venda.</p>
+
+      <div class="intro-divisor"></div>
+
+      <div class="intro-texto">
+        <p><strong>Seu turno começou.</strong></p>
+        <p>Hoje você será responsável pelo atendimento digital do restaurante.</p>
+        <p>Clientes entrarão em contato para fazer pedidos, tirar dúvidas, reclamar ou pedir recomendações.</p>
+        <p>Suas respostas determinarão a qualidade da experiência — e o resultado do dia.</p>
+      </div>
+
+      <button class="intro-btn" id="btn-iniciar">Iniciar atendimento →</button>
+      <p class="intro-rodape">Simulação com personagens e valores fictícios, para fins educacionais.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     TELA SIMULADOR
+     ============================================================ -->
+<section id="tela-simulador" class="tela">
+  <div class="app">
+
+    <header class="topbar">
+      <div class="topbar-linha">
+        <div class="marca">
+          <div class="marca-icone">💬</div>
+          <div class="marca-txt">
+            <h1>Desafio do Atendimento</h1>
+            <p>Tudo na Brasa</p>
+          </div>
+        </div>
+        <div class="receita">
+          <span>Vendas geradas</span>
+          <strong id="receita-valor">R$ 0,00</strong>
+        </div>
+      </div>
+
+      <div class="indicadores">
+        <div class="indicador" data-ind="experiencia">
+          <div class="indicador-topo">
+            <span class="indicador-icone">😊</span>
+            <span class="indicador-nome">Experiência</span>
+          </div>
+          <div class="indicador-valor" id="ind-experiencia">70</div>
+          <div class="indicador-barra"><div class="indicador-barra-fill" id="bar-experiencia"></div></div>
+        </div>
+        <div class="indicador" data-ind="conversao">
+          <div class="indicador-topo">
+            <span class="indicador-icone">🛒</span>
+            <span class="indicador-nome">Conversão</span>
+          </div>
+          <div class="indicador-valor" id="ind-conversao">50</div>
+          <div class="indicador-barra"><div class="indicador-barra-fill" id="bar-conversao"></div></div>
+        </div>
+        <div class="indicador" data-ind="vendas">
+          <div class="indicador-topo">
+            <span class="indicador-icone">💰</span>
+            <span class="indicador-nome">Vendas</span>
+          </div>
+          <div class="indicador-valor" id="ind-vendas">50</div>
+          <div class="indicador-barra"><div class="indicador-barra-fill" id="bar-vendas"></div></div>
+        </div>
+        <div class="indicador" data-ind="qualidade">
+          <div class="indicador-topo">
+            <span class="indicador-icone">⭐</span>
+            <span class="indicador-nome">Qualidade</span>
+          </div>
+          <div class="indicador-valor" id="ind-qualidade">70</div>
+          <div class="indicador-barra"><div class="indicador-barra-fill" id="bar-qualidade"></div></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="conteudo">
+
+      <!-- SIDEBAR CLIENTES -->
+      <aside class="sidebar">
+        <p class="sidebar-titulo">Clientes</p>
+        <ul class="clientes-lista" id="lista-clientes"></ul>
+      </aside>
+
+      <!-- PAINEL DO CHAT -->
+      <section class="chat-panel">
+        <div class="chat-header">
+          <div class="chat-header-avatar" id="chat-avatar">?</div>
+          <div class="chat-header-info">
+            <div class="chat-header-nome" id="chat-nome">—</div>
+            <div class="chat-header-status" id="chat-status">online</div>
+          </div>
+          <div class="chat-header-acoes">⋯</div>
+        </div>
+
+        <div class="chat-mensagens" id="chat-mensagens"></div>
+
+        <div class="opcoes-area oculto" id="opcoes-area">
+          <div class="opcoes-rotulo">Escolha sua resposta</div>
+          <div class="opcoes-lista" id="opcoes-lista"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</section>
+
+<!-- ============================================================
+     TELA DE RESULTADO
+     ============================================================ -->
+<section id="tela-resultado" class="tela">
+  <div class="resultado-wrap">
+    <div id="resultado-conteudo"></div>
+  </div>
+</section>
+
+<script>
+"use strict";
+
+/* ============================================================
+   DADOS DOS CLIENTES
+   ============================================================ */
+const CLIENTES = {
+  mariana: {
+    nome: "Mariana Silva",
+    iniciais: "MS",
+    cor: "#8B5CF6",
+    preview: "Boa noite. Vocês estão entregando hoje?"
+  },
+  carlos: {
+    nome: "Carlos Mendes",
+    iniciais: "CM",
+    cor: "#EF4444",
+    preview: "Meu pedido chegou frio."
+  },
+  ana: {
+    nome: "Ana Beatriz",
+    iniciais: "AB",
+    cor: "#F59E0B",
+    preview: "Oi! Faz tempo que não peço, hein?"
+  }
+};
+
+/* ============================================================
+   CENÁRIOS — 15 situações distribuídas em 3 clientes
+   ============================================================ */
+const CENARIOS = [
+
+  /* -------------------- MARIANA -------------------- */
+  {
+    id: "c1",
+    cliente: "mariana",
+    titulo: "Primeiro contato",
+    mensagemCliente: "Boa noite. Vocês estão entregando hoje?",
+    opcoes: [
+      {
+        texto: "Sim.",
+        classificacao: "fraca",
+        reacao: "Ah... entendi. E vocês entregam no Centro?",
+        feedback: { tipo: "atencao", texto: "A resposta confirmou a informação, mas encerrou a oportunidade de compreender o contexto do cliente. Faltou acolhimento e uma pergunta que conduzisse ao pedido." },
+        efeitos: { experiencia: -3, conversao: -3, vendas: 0, qualidade: -3 },
+        receita: 0
+      },
+      {
+        texto: "Boa noite! Sim, estamos realizando entregas. Posso te ajudar a escolher alguma coisa?",
+        classificacao: "excelente",
+        reacao: "Ah, que bom! Nunca pedi aí, queria uma recomendação.",
+        feedback: { tipo: "insight", texto: "Excelente abertura: confirmou a informação, manteve a cordialidade e criou continuidade. Você já conduz a conversa para a próxima etapa." },
+        efeitos: { experiencia: 6, conversao: 8, vendas: 3, qualidade: 5 },
+        receita: 0
+      },
+      {
+        texto: "Sim. Vou mandar o cardápio.",
+        classificacao: "adequada",
+        reacao: "Ok, recebi. Vou dar uma olhada.",
+        feedback: { tipo: "atencao", texto: "Enviar o cardápio sem contexto transfere todo o esforço para o cliente. O ideal é enviar e já sugerir algo a partir de uma pergunta simples." },
+        efeitos: { experiencia: 1, conversao: 2, vendas: 0, qualidade: 1 },
+        receita: 0
+      },
+      {
+        texto: "Estamos. Qual o seu pedido?",
+        classificacao: "adequada",
+        reacao: "Calma, ainda tô vendo. Qual hambúrguer você recomenda?",
+        feedback: { tipo: "atencao", texto: "A resposta foi objetiva, mas seca. Uma pergunta direta como “qual o seu pedido?” cria pressão em clientes novos. Prefira conduzir com cordialidade." },
+        efeitos: { experiencia: 1, conversao: 4, vendas: 2, qualidade: 2 },
+        receita: 0
+      }
+    ]
+  },
+  {
+    id: "c2",
+    cliente: "mariana",
+    titulo: "Cliente indeciso",
+    mensagemCliente: "Nunca pedi com vocês. Qual hambúrguer você recomenda?",
+    opcoes: [
+      {
+        texto: "Depende do que você gosta.",
+        classificacao: "fraca",
+        reacao: "É... eu gosto de muita coisa, mas queria uma ajuda mesmo.",
+        feedback: { tipo: "atencao", texto: "A resposta devolveu a pergunta ao cliente sem ajudá-lo a decidir. Cliente novo precisa de condução, não de mais dúvida." },
+        efeitos: { experiencia: -4, conversao: -3, vendas: -2, qualidade: -3 },
+        receita: 0
+      },
+      {
+        texto: "Tem tudo no cardápio.",
+        classificacao: "fraca",
+        reacao: "Sim, eu vi. Mas qual você acha melhor?",
+        feedback: { tipo: "atencao", texto: "Frases genéricas não orientam. O cliente já tem o cardápio e continua sem referência para decidir." },
+        efeitos: { experiencia: -3, conversao: -3, vendas: -2, qualidade: -3 },
+        receita: 0
+      },
+      {
+        texto: "Claro! Você prefere algo mais tradicional ou gosta de um hambúrguer mais completo? Posso te indicar algumas opções.",
+        classificacao: "excelente",
+        reacao: "Adoro um hambúrguer artesanal, mais completo. Mas ainda não sei qual escolher.",
+        feedback: { tipo: "insight", texto: "Ótima identificação de necessidade: em vez de responder “depende”, você fez uma pergunta que reduz o universo de opções e conduz o cliente à decisão." },
+        efeitos: { experiencia: 6, conversao: 7, vendas: 4, qualidade: 6 },
+        receita: 0
+      },
+      {
+        texto: "O mais caro é o melhor.",
+        classificacao: "critica",
+        reacao: "Hmm... achei meio forçado. Vou olhar o cardápio com calma.",
+        feedback: { tipo: "perdida", texto: "Associar qualidade a preço é uma abordagem que soa interesseira e afasta o cliente novo. Recomendações precisam fazer sentido para quem está do outro lado." },
+        efeitos: { experiencia: -10, conversao: -6, vendas: -3, qualidade: -7 },
+        receita: 0
+      }
+    ]
+  },
+  {
+    id: "c3",
+    cliente: "mariana",
+    titulo: "Prova social",
+    mensagemCliente: "Gosto de hambúrguer artesanal, mas não sei qual escolher.",
+    opcoes: [
+      {
+        texto: "Nossos hambúrgueres são todos muito bons.",
+        classificacao: "fraca",
+        reacao: "Imagino! Mas qual você me indicaria?",
+        feedback: { tipo: "atencao", texto: "Elogio genérico não ajuda a decidir. Cliente indeciso precisa de referência concreta, não de afirmação vaga." },
+        efeitos: { experiencia: -2, conversao: -2, vendas: 0, qualidade: -2 },
+        receita: 0
+      },
+      {
+        texto: "Uma opção bastante escolhida por quem gosta de hambúrguer artesanal é o nosso Artesanal da Casa. Ele leva blend 180g, cheddar, bacon e cebola caramelizada. Quer conhecer?",
+        classificacao: "excelente",
+        reacao: "Nossa, esse parece ótimo! Vou querer o tradicional então, para começar.",
+        feedback: { tipo: "insight", texto: "Prova social usada de forma natural e honesta: você indicou um produto bastante pedido, descreveu o que ele tem de especial e terminou com uma pergunta que conduz à decisão." },
+        efeitos: { experiencia: 7, conversao: 8, vendas: 5, qualidade: 6 },
+        receita: 0
+      },
+      {
+        texto: "Hoje só temos 2 unidades restantes do artesanal.",
+        classificacao: "critica",
+        reacao: "Ah, então deixa. Não quero tirar a última de ninguém.",
+        feedback: { tipo: "perdida", texto: "Escassez inventada é uma armadilha: quando o cliente percebe que não é verdade, a confiança se quebra. Escassez só funciona quando é real." },
+        efeitos: { experiencia: -10, conversao: -8, vendas: -5, qualidade: -9 },
+        receita: 0
+      },
+      {
+        texto: "Vou mandar o cardápio e você escolhe.",
+        classificacao: "adequada",
+        reacao: "Ok, vou olhar. Mas queria uma dica mesmo.",
+        feedback: { tipo: "atencao", texto: "Enviar o cardápio sem orientação devolve o problema ao cliente. Você perdeu a chance de conduzir a escolha — e a venda." },
+        efeitos: { experiencia: 1, conversao: 1, vendas: 0, qualidade: 1 },
+        receita: 0
+      }
+    ]
+  },
+  {
+    id: "c4",
+    cliente: "mariana",
+    titulo: "Upselling",
+    mensagemCliente: "Vou querer o hambúrguer tradicional.",
+    opcoes: [
+      {
+        texto: "Ok.",
+        classificacao: "fraca",
+        reacao: "Isso, um tradicional. Vou querer...",
+        feedback: { tipo: "atencao", texto: "Resposta seca encerra a oportunidade. Um simples “perfeito, quer conhecer a versão dupla?” abriria espaço para aumentar o ticket sem pressão." },
+        efeitos: { experiencia: -2, conversao: -2, vendas: -3, qualidade: -2 },
+        receita: 0
+      },
+      {
+        texto: "Quer o duplo?",
+        classificacao: "fraca",
+        reacao: "Não sei, o que muda?",
+        feedback: { tipo: "atencao", texto: "A pergunta soou abrupta e não explicou o benefício. Upselling precisa apresentar o ganho concreto para o cliente." },
+        efeitos: { experiencia: -1, conversao: 1, vendas: 0, qualidade: 0 },
+        receita: 0
+      },
+      {
+        texto: "Perfeito! Se quiser uma opção mais completa, temos a versão dupla desse mesmo hambúrguer. Quer conhecer?",
+        classificacao: "excelente",
+        reacao: "Boa! Pode ser o duplo então, quero algo mais reforçado.",
+        feedback: { tipo: "insight", texto: "Upselling sem pressão: você ofereceu uma versão superior do mesmo item, explicou que é mais completa e deixou o cliente decidir. Ticket médio maior, experiência preservada." },
+        efeitos: { experiencia: 4, conversao: 5, vendas: 8, qualidade: 5 },
+        receita: 8.00
+      },
+      {
+        texto: "É melhor pedir o duplo.",
+        classificacao: "critica",
+        reacao: "Melhor pra quem? Prefiro o tradicional mesmo.",
+        feedback: { tipo: "perdida", texto: "Decidir pelo cliente gera reatância. O papel do atendente é sugerir, nunca impor." },
+        efeitos: { experiencia: -9, conversao: -5, vendas: -4, qualidade: -7 },
+        receita: 0
+      }
+    ]
+  },
+  {
+    id: "c5",
+    cliente: "mariana",
+    titulo: "Cross-selling",
+    mensagemCliente: "Vou ficar com esse mesmo (o duplo).",
+    opcoes: [
+      {
+        texto: "Perfeito. Mais alguma coisa?",
+        classificacao: "adequada",
+        reacao: "Acho que é isso.",
+        feedback: { tipo: "atencao", texto: "Pergunta genérica abre espaço, mas não sugere. Um cliente que aceitou o duplo tem grande chance de aceitar um complemento." },
+        efeitos: { experiencia: 1, conversao: 1, vendas: 0, qualidade: 1 },
+        receita: 0
+      },
+      {
+        texto: "Ótima escolha! Esse hambúrguer combina muito com nossa batata rústica com cheddar e bacon. Quer incluir uma porção?",
+        classificacao: "excelente",
+        reacao: "Nossa, batata rústica com cheddar? Pode incluir sim!",
+        feedback: { tipo: "insight", texto: "Cross-selling contextual: você relacionou o complemento ao item escolhido e explicou o porquê. A venda adicional pareceu natural, não insistente." },
+        efeitos: { experiencia: 5, conversao: 6, vendas: 9, qualidade: 5 },
+        receita: 18.00
+      },
+      {
+        texto: "Quer batata e refrigerante? Sai mais barato.",
+        classificacao: "adequada",
+        reacao: "Quanto fica?",
+        feedback: { tipo: "atencao", texto: "A sugestão foi ampla e apoiada no preço. Faltou contexto do prato escolhido para dar relevância ao complemento." },
+        efeitos: { experiencia: 2, conversao: 3, vendas: 3, qualidade: 2 },
+        receita: 12.00
+      },
+      {
+        texto: "Sem bebida não dá, o hambúrguer é forte.",
+        classificacao: "critica",
+        reacao: "Nossa, tá me obrigando agora? Deixa quieto.",
+        feedback: { tipo: "perdida", texto: "Frases impositivas quebram a experiência. Cross-selling nunca deve parecer obrigação." },
+        efeitos: { experiencia: -10, conversao: -6, vendas: -3, qualidade: -8 },
+        receita: 0
+      }
+    ]
+  },
+  {
+    id: "c6",
+    cliente: "mariana",
+    titulo: "Cliente com pressa",
+    mensagemCliente: "Quanto tempo está demorando a entrega hoje?",
+    opcoes: [
+      {
+        texto: "Depende muito do movimento.",
+        classificacao: "fraca",
+        reacao: "Ah... e mais ou menos quanto?",
+        feedback: { tipo: "atencao", texto: "Resposta vaga gera insegurança. Cliente com pressa precisa de referência clara para decidir." },
+        efeitos: { experiencia: -3, conversao: -3, vendas: -2, qualidade: -3 },
+        receita: 0
+      },
+      {
+        texto: "Uns 15 minutos, pode pedir tranquilo.",
+        classificacao: "critica",
+        reacao: "Sério? Vou pedir então...",
+        feedback: { tipo: "perdida", texto: "Prometer prazo que você não pode cumprir destrói a experiência — mesmo que a comida chegue perfeita. Expectativa mentirosa sempre volta como frustração." },
+        efeitos: { experiencia: -12, conversao: 4, vendas: 2, qualidade: -12 },
+        receita: 0
+      },
+      {
+        texto: "O sistema informa prazo estimado de 35 a 45 minutos. Quer que eu já adiante seu pedido?",
+        classificacao: "excelente",
+        reacao: "Ok, obrigada pela transparência. Pode ir adiantando sim!",
+        feedback: { tipo: "insight", texto: "Transparência gera confiança: você informou o prazo real, explicou a origem da informação e já conduziu para o próximo passo." },
+        efeitos: { experiencia: 6, conversao: 7, vendas: 4, qualidade: 7 },
+        receita: 0
+      },
+      {
+        texto: "Aproveita que ainda temos o combo em promoção!",
+        classificacao: "critica",
+        reacao: "Eu perguntei do tempo, não de promoção...",
+        feedback: { tipo: "perdida", texto: "Ignorar a pergunta do cliente para empurrar oferta é uma das piores práticas de atendimento digital. Ele se sente desrespeitado." },
+        efeitos: { experiencia: -12, conversao: -6, vendas: -4, qualidade: -10 },
+        receita: 0
+      }
+    ]
+  },
+  {
+    id: "c7",
+    cliente: "mariana",
+    titulo: "Conferência do pedido",
+    mensagemCliente: "Meu endereço é Rua das Flores, 120 — ap 302, Centro. Vou pagar no Pix.",
+    opcoes: [
+      {
+        texto: "Ok, anotei.",
+        classificacao: "fraca",
+        reacao: "Você não vai confirmar o pedido?",
+        feedback: { tipo: "atencao", texto: "Não confirmar itens, observações e endereço antes de fechar é a principal causa de erro e cancelamento. A conferência ativa evita retrabalho." },
+        efeitos: { experiencia: -4, conversao: -3, vendas: -3, qualidade: -5 },
+        receita: 0
+      },
+      {
+        texto: "Perfeito! Só confirmando: 1 Artesanal da Casa duplo, 1 batata rústica, 1 refrigerante, sem cebola, endereço Rua das Flores 120 ap 302, pagamento via Pix, previsão de 35 a 45 minutos. Total R$ 68,90. Está tudo certo?",
+        classificacao: "excelente",
+        reacao: "Isso mesmo, tudo certo! Obrigada 😊",
+        feedback: { tipo: "insight", texto: "Confirmação ativa exemplar: itens, quantidade, observação, endereço, pagamento, prazo e valor. Esse é o passo que mais evita erros e cancelamentos." },
+        efeitos: { experiencia: 7, conversao: 8, vendas: 5, qualidade: 8 },
+        receita: 68.90
+      },
+      {
+        texto: "Vou passar pra cozinha.",
+        classificacao: "fraca",
+        reacao: "Mas não vai confirmar nada comigo?",
+        feedback: { tipo: "atencao", texto: "Encaminhar sem conferir tira o cliente do controle. Ele fica inseguro sobre o que foi realmente registrado." },
+        efeitos: { experiencia: -4, conversao: -3, vendas: -3, qualidade: -5 },
+        receita: 0
+      },
+      {
+        texto: "Certo. Assim que sair aviso.",
+        classificacao: "adequada",
+        reacao: "Ok, obrigada.",
+        feedback: { tipo: "atencao", texto: "A mensagem foi cordial, mas não confirmou o conteúdo do pedido. Uma conferência curta reduziria o risco de erro sem atrasar o atendimento." },
+        efeitos: { experiencia: 1, conversao: 2, vendas: 1, qualidade: 1 },
+        receita: 58.90
+      }
+    ]
+  },
+
+  /* -------------------- CARLOS -------------------- */
+  {
+    id: "c8",
+    cliente: "carlos",
+    titulo: "Reclamação",
+    mensagemCliente: "Meu pedido chegou frio.",
+    opcoes: [
+      {
+        texto: "Isso é problema do entregador, vou verificar.",
+        classificacao: "critica",
+        reacao: "Problema do entregador? Eu pedi com vocês!",
+        feedback: { tipo: "perdida", texto: "Transferir a culpa é uma das piores reações possíveis. Para o cliente, a marca é uma só — entregador, cozinha e atendimento são a mesma empresa." },
+        efeitos: { experiencia: -15, conversao: -6, vendas: -6, qualidade: -15 },
+        receita: 0
+      },
+      {
+        texto: "Ah, é normal esfriar um pouco no caminho.",
+        classificacao: "critica",
+        reacao: "Normal? Paguei por uma refeição quente!",
+        feedback: { tipo: "perdida", texto: "Minimizar o problema invalida a percepção do cliente. Ele não quer explicação, quer acolhimento e solução." },
+        efeitos: { experiencia: -15, conversao: -5, vendas: -5, qualidade: -14 },
+        receita: 0
+      },
+      {
+        texto: "Poxa, sinto muito.",
+        classificacao: "fraca",
+        reacao: "Sinto muito como? Vão fazer o quê?",
+        feedback: { tipo: "atencao", texto: "Pedir desculpas sem agir é insuficiente. O cliente precisa de um próximo passo concreto." },
+        efeitos: { experiencia: -4, conversao: -3, vendas: -3, qualidade: -4 },
+        receita: 0
+      },
+      {
+        texto: "Carlos, sinto muito pela experiência. Vou verificar agora o que aconteceu com seu pedido. Pode me confirmar o número?",
+        classificacao: "excelente",
+        reacao: "É o pedido #4821.",
+        feedback: { tipo: "insight", texto: "Acolhimento correto: você reconheceu o problema, assumiu a responsabilidade da marca e imediatamente foi verificar. A reclamação vira oportunidade de recuperação." },
+        efeitos: { experiencia: 8, conversao: 6, vendas: 4, qualidade: 8 },
+        receita: 0
+      }
+    ]
+  },
+  {
+    id: "c9",
+    cliente: "carlos",
+    titulo: "Recuperação",
+    mensagemCliente: "O pedido foi o #4821.",
+    opcoes: [
+      {
+        texto: "Vou anotar sua reclamação.",
+        classificacao: "fraca",
+        reacao: "Anotar? E a solução?",
+        feedback: { tipo: "atencao", texto: "Anotar sem resolver não devolve a experiência ao cliente. Reclamação exige ação imediata." },
+        efeitos: { experiencia: -4, conversao: -3, vendas: -3, qualidade: -4 },
+        receita: 0
+      },
+      {
+        texto: "Já localizei. Como forma de resolver, posso enviar uma nova porção quentinha agora, sem custo, ou um crédito de R$ 40 no seu próximo pedido. Qual prefere?",
+        classificacao: "excelente",
+        reacao: "Pode enviar a nova porção. Obrigado.",
+        feedback: { tipo: "insight", texto: "Recuperação no padrão: você verificou, ofereceu duas soluções reais e deixou o cliente escolher. Isso restaura a confiança e mostra que a marca se responsabiliza." },
+        efeitos: { experiencia: 12, conversao: 8, vendas: 6, qualidade: 11 },
+        receita: 0
+      },
+      {
+        texto: "Você quer desconto no próximo?",
+        classificacao: "adequada",
+        reacao: "Só isso? Achei que teria uma solução mais imediata.",
+        feedback: { tipo: "atencao", texto: "Adiar a solução para a próxima compra não resolve a experiência atual. O cliente precisa sentir que o problema foi tratado agora." },
+        efeitos: { experiencia: -2, conversao: 1, vendas: 1, qualidade: -1 },
+        receita: 0
+      },
+      {
+        texto: "Infelizmente não podemos fazer nada.",
+        classificacao: "critica",
+        reacao: "Sério isso? Então vou avaliar com 1 estrela.",
+        feedback: { tipo: "perdida", texto: "Fechar a porta para o cliente gera danos ainda maiores: avaliação negativa, perda do cliente e má reputação pública." },
+        efeitos: { experiencia: -16, conversao: -10, vendas: -8, qualidade: -16 },
+        receita: 0
+      }
+    ]
+  },
+  {
+    id: "c10",
+    cliente: "carlos",
+    titulo: "Fechamento da recuperação",
+    mensagemCliente: "Pode enviar a nova porção. Obrigado.",
+    opcoes: [
+      {
+        texto: "Ok, enviado.",
+        classificacao: "fraca",
+        reacao: "Beleza.",
+        feedback: { tipo: "atencao", texto: "Encerrar sem alinhar prazo nem acompanhar deixa o cliente em dúvida sobre a resolução. O cuidado se completa com um próximo passo claro." },
+        efeitos: { experiencia: -2, conversao: -1, vendas: -1, qualidade: -2 },
+        receita: 0
+      },
+      {
+        texto: "Perfeito, Carlos. Já acionei a cozinha, sua nova porção sai em ~20 min. Vou te avisar assim que o entregador sair. Obrigado pela paciência!",
+        classificacao: "excelente",
+        reacao: "Ótimo, obrigado pelo cuidado!",
+        feedback: { tipo: "insight", texto: "Fechamento completo: você confirmou a ação, informou prazo, prometeu acompanhamento e agradeceu. O cliente sente que o caso foi levado a sério de verdade." },
+        efeitos: { experiencia: 10, conversao: 6, vendas: 5, qualidade: 9 },
+        receita: 0
+      },
+      {
+        texto: "Agora é só aguardar.",
+        classificacao: "adequada",
+        reacao: "Ok, aguardo.",
+        feedback: { tipo: "atencao", texto: "A resposta encerra o caso, mas poderia ter reforçado o compromisso com prazo e acompanhamento." },
+        efeitos: { experiencia: 1, conversao: 1, vendas: 1, qualidade: 1 },
+        receita: 0
+      },
+      {
+        texto: "Sem problema. Avalia a gente com 5 estrelas.",
+        classificacao: "critica",
+        reacao: "5 estrelas por ter chegado frio? Aí já é demais.",
+        feedback: { tipo: "perdida", texto: "Pedir avaliação positiva logo após um problema é insensível. A hora certa de pedir avaliação é depois da boa experiência, não durante a correção." },
+        efeitos: { experiencia: -10, conversao: -5, vendas: -4, qualidade: -10 },
+        receita: 0
+      }
+    ]
+  },
+
+  /* -------------------- ANA -------------------- */
+  {
+    id: "c11",
+    cliente: "ana",
+    titulo: "Retenção",
+    mensagemCliente: "Oi! Faz tempo que não peço, hein?",
+    opcoes: [
+      {
+        texto: "Verdade, sumiu!",
+        classificacao: "fraca",
+        reacao: "É... correria mesmo.",
+        feedback: { tipo: "atencao", texto: "A resposta soa como cobrança e não abre espaço para reconexão. Cliente antigo precisa se sentir bem-vindo, não culpado." },
+        efeitos: { experiencia: -3, conversao: -2, vendas: -2, qualidade: -3 },
+        receita: 0
+      },
+      {
+        texto: "Oi, Ana! Que bom te ver por aqui 💚 Senti sua falta! Sua parmegiana preferida continua no cardápio. Quer que eu já veja disponibilidade?",
+        classificacao: "excelente",
+        reacao: "Adorei! Tô com vontade mesmo 😊",
+        feedback: { tipo: "insight", texto: "Retenção de excelência: você lembrou do nome, da preferência dela e já conduziu para o pedido. Isso é relacionamento, não script." },
+        efeitos: { experiencia: 10, conversao: 9, vendas: 7, qualidade: 9 },
+        receita: 0
+      },
+      {
+        texto: "Temos promoções esta semana.",
+        classificacao: "adequada",
+        reacao: "Legal, o que tá em promoção?",
+        feedback: { tipo: "atencao", texto: "Promoção ajuda, mas é impessoal. Cliente recorrente responde melhor a lembrança do que a desconto." },
+        efeitos: { experiencia: 2, conversao: 3, vendas: 2, qualidade: 2 },
+        receita: 0
+      },
+      {
+        texto: "Está devendo, hein?",
+        classificacao: "critica",
+        reacao: "Poxa, não precisa disso...",
+        feedback: { tipo: "perdida", texto: "Cobrar o cliente brincando de algo que não é da sua conta cria constrangimento. Tom inadequado com cliente recorrente machuca a relação." },
+        efeitos: { experiencia: -12, conversao: -7, vendas: -5, qualidade: -10 },
+        receita: 0
+      }
+    ]
+  },
+  {
+    id: "c12",
+    cliente: "ana",
+    titulo: "Oferta personalizada",
+    mensagemCliente: "Adorei! Tô com vontade mesmo.",
+    opcoes: [
+      {
+        texto: "Ótimo! Pode pedir.",
+        classificacao: "fraca",
+        reacao: "Ah tá. Deixa eu ver o cardápio.",
+        feedback: { tipo: "atencao", texto: "Você deixou a decisão inteira para a cliente. Cliente com intenção de compra precisa de condução concreta para converter." },
+        efeitos: { experiencia: -2, conversao: -3, vendas: -3, qualidade: -2 },
+        receita: 0
+      },
+      {
+        texto: "Vou deixar reservada. Você prefere entregar hoje à noite ou no almoço de amanhã?",
+        classificacao: "excelente",
+        reacao: "Hoje à noite! Pode confirmar pra 20h?",
+        feedback: { tipo: "insight", texto: "Fechamento consultivo: você retomou o contexto, fez uma pergunta fechada e conduziu a cliente para a decisão. Esse é o padrão de fechamento mais eficaz." },
+        efeitos: { experiencia: 8, conversao: 10, vendas: 7, qualidade: 8 },
+        receita: 72.50
+      },
+      {
+        texto: "Faz um combo com sobremesa?",
+        classificacao: "adequada",
+        reacao: "Hmm, pode ser. Mas quero a parmegiana mesmo.",
+        feedback: { tipo: "atencao", texto: "A sugestão foi boa, mas antes de complementar era preciso garantir o item principal. Foque no que o cliente já demonstrou querer." },
+        efeitos: { experiencia: 2, conversao: 3, vendas: 3, qualidade: 2 },
+        receita: 62.50
+      },
+      {
+        texto: "Se pedir hoje ganha 10%.",
+        classificacao: "adequada",
+        reacao: "Ah, então vou aproveitar hoje.",
+        feedback: { tipo: "atencao", texto: "Desconto sempre funciona, mas desvaloriza a marca e o produto. Prefira conduzir pela conveniência e pelo relacionamento antes do preço." },
+        efeitos: { experiencia: 1, conversao: 4, vendas: 2, qualidade: 1 },
+        receita: 62.50
+      }
+    ]
+  },
+  {
+    id: "c13",
+    cliente: "ana",
+    titulo: "Reclamação leve",
+    mensagemCliente: "Só uma coisa: da última vez demorou um pouco mais do que vocês falaram.",
+    opcoes: [
+      {
+        texto: "Foi dia de pico, acontece.",
+        classificacao: "critica",
+        reacao: "Ah, então na próxima pode acontecer de novo?",
+        feedback: { tipo: "perdida", texto: "Justificar sem corrigir passa a impressão de que o problema é normal e vai se repetir. Cliente recorrente merece mais cuidado do que isso." },
+        efeitos: { experiencia: -9, conversao: -5, vendas: -4, qualidade: -9 },
+        receita: 0
+      },
+      {
+        texto: "Agradeço por me contar, Ana. Vou registrar aqui para melhorarmos. Hoje vou acompanhar seu pedido de perto e te atualizo em cada etapa.",
+        classificacao: "excelente",
+        reacao: "Que legal, obrigada! Isso faz diferença.",
+        feedback: { tipo: "insight", texto: "Você transformou uma reclamação leve em oportunidade de fidelização: acolheu, agradeceu pelo retorno e assumiu um compromisso concreto de acompanhamento." },
+        efeitos: { experiencia: 9, conversao: 6, vendas: 4, qualidade: 9 },
+        receita: 0
+      },
+      {
+        texto: "Vamos melhorar.",
+        classificacao: "fraca",
+        reacao: "Ok...",
+        feedback: { tipo: "atencao", texto: "Promessa vaga não convence. O cliente precisa perceber uma mudança real de postura — e um compromisso específico." },
+        efeitos: { experiencia: -3, conversao: -2, vendas: -2, qualidade: -3 },
+        receita: 0
+      },
+      {
+        texto: "Você entende, né? Cozinha cheia.",
+        classificacao: "critica",
+        reacao: "Entendo, mas queria ser avisada.",
+        feedback: { tipo: "perdida", texto: "Pedir compreensão sem oferecer solução terceiriza a frustração para o cliente. Quem precisa resolver é a marca." },
+        efeitos: { experiencia: -10, conversao: -5, vendas: -5, qualidade: -10 },
+        receita: 0
+      }
+    ]
+  },
+  {
+    id: "c14",
+    cliente: "ana",
+    titulo: "Pós-venda",
+    mensagemCliente: "Chegou rapidinho hoje! Obrigada.",
+    opcoes: [
+      {
+        texto: "De nada.",
+        classificacao: "fraca",
+        reacao: "👍",
+        feedback: { tipo: "atencao", texto: "O pós-venda é a chance de ouro de construir fidelização. “De nada” fecha a porta para uma conversa que poderia gerar recompra e avaliação espontânea." },
+        efeitos: { experiencia: -2, conversao: -2, vendas: -2, qualidade: -2 },
+        receita: 0
+      },
+      {
+        texto: "Que ótimo, Ana! Fico feliz que tenha chegado no tempo certo 😊 Ficou tudo do jeito que você esperava?",
+        classificacao: "excelente",
+        reacao: "Sim, estava deliciosa! Vou pedir mais vezes 💚",
+        feedback: { tipo: "insight", texto: "Pós-venda no ponto: você celebrou com a cliente, demonstrou cuidado e perguntou sobre a experiência. Isso abre espaço para o elogio espontâneo e para a recompra." },
+        efeitos: { experiencia: 9, conversao: 6, vendas: 5, qualidade: 8 },
+        receita: 0
+      },
+      {
+        texto: "Avalia a gente no Google?",
+        classificacao: "fraca",
+        reacao: "Depois eu vejo.",
+        feedback: { tipo: "atencao", texto: "Pedir avaliação imediatamente transforma um momento de carinho em pedido. O pedido de avaliação vem depois de construir o vínculo." },
+        efeitos: { experiencia: -1, conversao: -1, vendas: -1, qualidade: -1 },
+        receita: 0
+      },
+      {
+        texto: "Já pediu de novo?",
+        classificacao: "critica",
+        reacao: "Nossa, acabei de receber. Calma!",
+        feedback: { tipo: "perdida", texto: "Vender logo após a entrega soa ansioso e desrespeitoso. Espere o cliente sentir o valor antes de sugerir uma nova compra." },
+        efeitos: { experiencia: -8, conversao: -3, vendas: -3, qualidade: -7 },
+        receita: 0
+      }
+    ]
+  },
+  {
+    id: "c15",
+    cliente: "ana",
+    titulo: "Fidelização",
+    mensagemCliente: "Estava deliciosa. Vou pedir mais vezes!",
+    opcoes: [
+      {
+        texto: "Ótimo!",
+        classificacao: "fraca",
+        reacao: "😊",
+        feedback: { tipo: "atencao", texto: "A resposta foi cordial, mas desperdiçou a chance de criar um vínculo que garante a recompra futura." },
+        efeitos: { experiencia: -1, conversao: -1, vendas: -1, qualidade: -1 },
+        receita: 0
+      },
+      {
+        texto: "Muito bom ouvir isso, Ana! Vou deixar sua preferência anotada para agilizar da próxima vez. Na quinta temos a parmegiana especial — quer que eu te avise?",
+        classificacao: "excelente",
+        reacao: "Amei! Pode avisar sim, com certeza vou querer!",
+        feedback: { tipo: "insight", texto: "Fidelização perfeita: você registrou a preferência, ofereceu valor futuro e criou um motivo concreto para o próximo pedido. Cliente virou fã da marca." },
+        efeitos: { experiencia: 10, conversao: 8, vendas: 7, qualidade: 9 },
+        receita: 0
+      },
+      {
+        texto: "Manda pra todo mundo que você conhece!",
+        classificacao: "critica",
+        reacao: "Ah tá... vou pensar.",
+        feedback: { tipo: "perdida", texto: "Pedir indicação de forma tão direta transforma um momento espontâneo em obrigação. O cliente se sente usado, não valorizado." },
+        efeitos: { experiencia: -9, conversao: -4, vendas: -4, qualidade: -8 },
+        receita: 0
+      },
+      {
+        texto: "Obrigado, avalia com 5 estrelas.",
+        classificacao: "fraca",
+        reacao: "Depois eu vejo com calma.",
+        feedback: { tipo: "atencao", texto: "Pedido de avaliação sem reforçar o valor entregue soa mecânico. Avaliação espontânea nasce de experiência marcante." },
+        efeitos: { experiencia: -3, conversao: -2, vendas: -2, qualidade: -3 },
+        receita: 0
+      }
+    ]
+  }
+];
+
+const LETRAS = ["A", "B", "C", "D"];
+
+/* ============================================================
+   ESTADO DA SIMULAÇÃO
+   ============================================================ */
+const estado = {
+  indicadores: {
+    experiencia: 70,
+    conversao: 50,
+    vendas: 50,
+    qualidade: 70
+  },
+  receita: 0,
+  cenarioAtual: 0,
+  rodando: false,
+  clientesVistos: {}
+};
+
+/* ============================================================
+   UTILITÁRIOS
+   ============================================================ */
+function delay(ms) {
+  return new Promise(function (r) { setTimeout(r, ms); });
+}
+
+function mostrarTela(id) {
+  const telas = document.querySelectorAll(".tela");
+  for (let i = 0; i < telas.length; i++) telas[i].classList.remove("ativa");
+  document.getElementById(id).classList.add("ativa");
+  window.scrollTo(0, 0);
+}
+
+function limitar(v) {
+  if (v < 0) return 0;
+  if (v > 100) return 100;
+  return v;
+}
+
+function formatarReal(v) {
+  return "R$ " + v.toFixed(2).replace(".", ",");
+}
+
+function horaAtual() {
+  const d = new Date();
+  const h = String(d.getHours()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
+  return h + ":" + m;
+}
+
+/* ============================================================
+   INICIALIZAÇÃO
+   ============================================================ */
+document.getElementById("btn-iniciar").addEventListener("click", iniciarSimulacao);
+
+function iniciarSimulacao() {
+  estado.indicadores = { experiencia: 70, conversao: 50, vendas: 50, qualidade: 70 };
+  estado.receita = 0;
+  estado.cenarioAtual = 0;
+  estado.clientesVistos = {};
+
+  document.getElementById("chat-mensagens").innerHTML = "";
+  document.getElementById("receita-valor").textContent = "R$ 0,00";
+  atualizarIndicadores();
+
+  renderizarListaClientes();
+
+  mostrarTela("tela-simulador");
+
+  /* divisor de data */
+  const div = document.createElement("div");
+  div.className = "divisor-data";
+  div.textContent = "Hoje";
+  document.getElementById("chat-mensagens").appendChild(div);
+
+  /* pequena espera inicial antes de começar o atendimento */
+  setTimeout(function () {
+    estado.rodando = true;
+    executarCenario(estado.cenarioAtual);
+  }, 500);
+}
+
+/* ============================================================
+   LISTA DE CLIENTES (SIDEBAR)
+   ============================================================ */
+function renderizarListaClientes() {
+  const ul = document.getElementById("lista-clientes");
+  ul.innerHTML = "";
+
+  const ordem = ["mariana", "carlos", "ana"];
+  const cenarioAtual = CENARIOS[estado.cenarioAtual];
+
+  ordem.forEach(function (id) {
+    const c = CLIENTES[id];
+    const li = document.createElement("li");
+    li.className = "cliente";
+    li.dataset.id = id;
+
+    if (cenarioAtual && cenarioAtual.cliente === id) {
+      li.classList.add("ativo");
+    }
+
+    /* verificar se já foi concluído */
+    const ultimoDoCliente = CENARIOS
+      .map(function (c2, idx) { return { c: c2, idx: idx }; })
+      .filter(function (o) { return o.c.cliente === id; })
+      .pop();
+
+    if (ultimoDoCliente && estado.cenarioAtual > ultimoDoCliente.idx) {
+      li.classList.add("concluido");
+    }
+
+    li.innerHTML =
+      '<div class="cliente-avatar" style="background:' + c.cor + '">' + c.iniciais + "</div>" +
+      '<div class="cliente-info">' +
+        '<div class="cliente-nome">' + c.nome + "</div>" +
+        '<div class="cliente-preview">' + c.preview + "</div>" +
+      "</div>" +
+      (li.classList.contains("concluido")
+        ? '<span class="cliente-check">✓</span>'
+        : "");
+
+    ul.appendChild(li);
+  });
+}
+
+/* ============================================================
+   INDICADORES
+   ============================================================ */
+function atualizarIndicadores() {
+  const chaves = ["experiencia", "conversao", "vendas", "qualidade"];
+
+  chaves.forEach(function (k) {
+    const v = estado.indicadores[k];
+    const el = document.getElementById("ind-" + k);
+    const bar = document.getElementById("bar-" + k);
+    if (el) el.textContent = v;
+    if (bar) bar.style.width = v + "%";
+  });
+
+  document.getElementById("receita-valor").textContent = formatarReal(estado.receita);
+}
+
+function aplicarEfeitos(efeitos, receita) {
+  const chaves = ["experiencia", "conversao", "vendas", "qualidade"];
+  const pulsos = [];
+
+  chaves.forEach(function (k) {
+    if (typeof efeitos[k] === "number" && efeitos[k] !== 0) {
+      estado.indicadores[k] = limitar(estado.indicadores[k] + efeitos[k]);
+      pulsos.push(k);
+    }
+  });
+
+  if (typeof receita === "number" && receita > 0) {
+    estado.receita += receita;
+  }
+
+  atualizarIndicadores();
+
+  /* efeito visual de pulso */
+  pulsos.forEach(function (k) {
+    const ind = document.querySelector('.indicador[data-ind="' + k + '"]');
+    if (!ind) return;
+    ind.classList.add("pulso");
+    setTimeout(function () { ind.classList.remove("pulso"); }, 700);
+  });
+}
+
+/* ============================================================
+   MENSAGENS NO CHAT
+   ============================================================ */
+function scrollChat() {
+  const chat = document.getElementById("chat-mensagens");
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function adicionarMensagem(tipo, texto) {
+  const chat = document.getElementById("chat-mensagens");
+  const div = document.createElement("div");
+  div.className = "msg " + (tipo === "cliente" ? "msg-cliente" : "msg-atendente");
+  div.innerHTML =
+    '<span class="msg-conteudo">' + texto + "</span>" +
+    '<span class="msg-hora">' + horaAtual() + "</span>";
+  chat.appendChild(div);
+  scrollChat();
+}
+
+function adicionarSistema(tipo, rotulo, texto) {
+  const chat = document.getElementById("chat-mensagens");
+  const div = document.createElement("div");
+  div.className = "msg-sistema " + tipo;
+  div.innerHTML =
+    '<span class="rotulo-sistema">' + rotulo + "</span>" +
+    texto;
+  chat.appendChild(div);
+  scrollChat();
+}
+
+function mostrarDigitando(nome) {
+  const chat = document.getElementById("chat-mensagens");
+  const div = document.createElement("div");
+  div.className = "msg-digitando";
+  div.id = "digitando";
+  div.innerHTML = "<span></span><span></span><span></span>";
+  chat.appendChild(div);
+  scrollChat();
+}
+
+function removerDigitando() {
+  const el = document.getElementById("digitando");
+  if (el && el.parentNode) el.parentNode.removeChild(el);
+}
+
+/* ============================================================
+   EXECUÇÃO DE CENÁRIO
+   ============================================================ */
+async function executarCenario(idx) {
+  const c = CENARIOS[idx];
+  if (!c) return;
+
+  /* atualizar cabeçalho do chat */
+  const cli = CLIENTES[c.cliente];
+  const avatar = document.getElementById("chat-avatar");
+  avatar.textContent = cli.iniciais;
+  avatar.style.background = cli.cor;
+  document.getElementById("chat-nome").textContent = cli.nome;
+  document.getElementById("chat-status").textContent = "online";
+
+  renderizarListaClientes();
+
+  /* esconder opções até a mensagem chegar */
+  document.getElementById("opcoes-area").classList.add("oculto");
+  document.getElementById("opcoes-lista").innerHTML = "";
+
+  /* digitação + mensagem do cliente */
+  mostrarDigitando();
+  await delay(900);
+  removerDigitando();
+  adicionarMensagem("cliente", c.mensagemCliente);
+
+  await delay(350);
+
+  /* mostrar opções */
+  renderizarOpcoes(c);
+}
+
+function renderizarOpcoes(c) {
+  const area = document.getElementById("opcoes-area");
+  const lista = document.getElementById("opcoes-lista");
+  lista.innerHTML = "";
+
+  c.opcoes.forEach(function (op, i) {
+    const botao = document.createElement("button");
+    botao.type = "button";
+    botao.className = "opcao";
+    botao.innerHTML =
+      '<span class="opcao-letra">' + LETRAS[i] + "</span>" +
+      '<span class="opcao-txt">' + op.texto + "</span>";
+    botao.addEventListener("click", function () {
+      escolherOpcao(i);
+    });
+    lista.appendChild(botao);
+  });
+
+  area.classList.remove("oculto");
+  scrollChat();
+}
+
+/* ============================================================
+   ESCOLHA DO PARTICIPANTE
+   ============================================================ */
+async function escolherOpcao(idx) {
+  if (!estado.rodando) return;
+
+  const c = CENARIOS[estado.cenarioAtual];
+  const op = c.opcoes[idx];
+
+  /* desabilitar opções */
+  const botoes = document.querySelectorAll(".opcao");
+  botoes.forEach(function (b) { b.disabled = true; });
+  document.getElementById("opcoes-area").classList.add("oculto");
+
+  /* mostrar resposta do atendente no chat */
+  adicionarMensagem("atendente", op.texto);
+
+  /* aplicar efeitos imediatos */
+  aplicarEfeitos(op.efeitos, op.receita);
+
+  await delay(500);
+
+  /* cliente digitando */
+  mostrarDigitando();
+  await delay(950);
+  removerDigitando();
+
+  /* reação do cliente */
+  adicionarMensagem("cliente", op.reacao);
+
+  await delay(400);
+
+  /* feedback */
+  if (op.feedback) {
+    let rotulo = "Insight de atendimento";
+    if (op.feedback.tipo === "atencao") rotulo = "Atenção";
+    else if (op.feedback.tipo === "perdida") rotulo = "Oportunidade perdida";
+    adicionarSistema(op.feedback.tipo, rotulo, op.feedback.texto);
+  }
+
+  /* feedback de receita */
+  if (op.receita > 0) {
+    await delay(300);
+    adicionarSistema("receita", "Venda registrada", "Pedido adicionado ao total: <strong>" + formatarReal(op.receita) + "</strong>.");
+  }
+
+  /* próxima etapa */
+  await delay(1600);
+
+  if (estado.cenarioAtual < CENARIOS.length - 1) {
+    estado.cenarioAtual++;
+    renderizarListaClientes();
+    executarCenario(estado.cenarioAtual);
+  } else {
+    finalizarSimulacao();
+  }
+}
+
+/* ============================================================
+   FINALIZAÇÃO E RESULTADO
+   ============================================================ */
+function calcularNotaGeral() {
+  const i = estado.indicadores;
+  return Math.round((i.experiencia + i.conversao + i.vendas + i.qualidade) / 4);
+}
+
+function finalizarSimulacao() {
+  estado.rodando = false;
+
+  const nota = calcularNotaGeral();
+  const receita = estado.receita;
+
+  let medalha, titulo, texto;
+  if (nota >= 88) {
+    medalha = "🏆";
+    titulo = "Atendente Consultor de Elite";
+    texto = "Você transformou conversas em experiências memoráveis e em vendas legítimas. Sua condução une cordialidade, clareza e oportunidade comercial — exatamente o padrão que queremos multiplicar no time.";
+  } else if (nota >= 72) {
+    medalha = "⭐";
+    titulo = "Vendedor Estratégico";
+    texto = "Muito bom! Você domina as bases do atendimento digital e aproveita bem as oportunidades de venda. Pequenos ajustes no fechamento e na recuperação de conflitos elevam ainda mais seu resultado.";
+  } else if (nota >= 55) {
+    medalha = "📈";
+    titulo = "Atendimento em Evolução";
+    texto = "Você já acerta o essencial, mas ainda perde oportunidades importantes. O foco agora é conduzir ativamente cada conversa, sugerir com contexto e fechar com clareza.";
+  } else {
+    medalha = "🎯";
+    titulo = "Hora de Reforçar o Básico";
+    texto = "Seu resultado é um ótimo ponto de partida. As ferramentas do workshop trazem exatamente o que falta para atender e vender melhor pelo WhatsApp. Refaça a simulação após revisar o conteúdo.";
+  }
+
+  const dicas = gerarDicas();
+
+  const ind = estado.indicadores;
+  const indicadoresFinal = [
+    { icone: "😊", nome: "Experiência", valor: ind.experiencia },
+    { icone: "🛒", nome: "Conversão", valor: ind.conversao },
+    { icone: "💰", nome: "Vendas", valor: ind.vendas },
+    { icone: "⭐", nome: "Qualidade", valor: ind.qualidade }
+  ];
+
+  let indHtml = "";
+  indicadoresFinal.forEach(function (i) {
+    let classe = "";
+    if (i.valor < 50) classe = "baixo";
+    else if (i.valor < 72) classe = "medio";
+    indHtml +=
+      '<div class="indicador-final ' + classe + '">' +
+        '<div class="indicador-final-topo">' +
+          '<span class="indicador-final-nome">' + i.icone + " " + i.nome + "</span>" +
+          '<span class="indicador-final-valor">' + i.valor + "</span>" +
+        "</div>" +
+        '<div class="indicador-final-barra">' +
+          '<div class="indicador-final-fill" style="width:' + i.valor + '%"></div>' +
+        "</div>" +
+      "</div>";
+  });
+
+  let dicasHtml = "";
+  dicas.forEach(function (d) {
+    dicasHtml += "<li>" + d + "</li>";
+  });
+
+  document.getElementById("resultado-conteudo").innerHTML =
+    '<div class="resultado-card">' +
+      '<div class="resultado-medalha">' + medalha + "</div>" +
+      '<h2 class="resultado-titulo">' + titulo + "</h2>" +
+      '<p class="resultado-sub">Nota geral: <strong>' + nota + "/100</strong></p>" +
+
+      '<div class="resultado-receita">' +
+        "<span>Vendas geradas</span>" +
+        "<strong>" + formatarReal(receita) + "</strong>" +
+      "</div>" +
+
+      '<div class="indicadores-final">' + indHtml + "</div>" +
+
+      '<p class="resultado-sub" style="text-align:left;margin-bottom:16px;">' + texto + "</p>" +
+
+      '<p class="dicas-titulo">Recomendações para o seu atendimento</p>' +
+      '<ul class="dicas-lista">' + dicasHtml + "</ul>" +
+
+      '<div class="botoes-finais">' +
+        '<button type="button" class="btn-final btn-final-primario" id="btn-reiniciar">🔄 Refazer simulação</button>' +
+        '<button type="button" class="btn-final btn-final-secundario" id="btn-imprimir">🖨️ Imprimir / Salvar PDF</button>' +
+      "</div>" +
+    "</div>";
+
+  document.getElementById("btn-reiniciar").addEventListener("click", function () {
+    mostrarTela("tela-intro");
+  });
+
+  document.getElementById("btn-imprimir").addEventListener("click", function () {
+    window.print();
+  });
+
+  mostrarTela("tela-resultado");
+}
+
+/* ============================================================
+   GERAÇÃO DE DICAS PERSONALIZADAS
+   ============================================================ */
+function gerarDicas() {
+  const dicas = [];
+  const i = estado.indicadores;
+
+  if (i.experiencia < 60) {
+    dicas.push("Fortaleça o acolhimento: cumprimente pelo nome quando possível, valide a fala do cliente e responda com cordialidade antes de ir ao ponto.");
+  } else if (i.experiencia < 80) {
+    dicas.push("Boa experiência no geral — refine o tom para que cada resposta soe pessoal e não apenas funcional.");
+  } else {
+    dicas.push("Sua Experiência está excelente: mantenha o padrão de acolhimento e use esse diferencial para conduzir vendas com naturalidade.");
+  }
+
+  if (i.conversao < 60) {
+    dicas.push("Aumente a Conversão: toda conversa deve terminar com uma pergunta que conduza o cliente ao próximo passo. Nunca encerre sem confirmar intenção.");
+  } else if (i.conversao < 80) {
+    dicas.push("Sua Conversão está boa — experimente fechamentos com perguntas fechadas (\"deixo reservado para 20h?\") para acelerar a decisão.");
+  } else {
+    dicas.push("Conversão elevada: você conduz o cliente para a decisão com clareza. Continue aproveitando momentos naturais para sugerir.");
+  }
+
+  if (i.vendas < 60) {
+    dicas.push("Reforce as Vendas: use upselling (versão superior do mesmo item) e cross-selling (complementos) sempre contextualizados ao que o cliente já escolheu.");
+  } else if (i.vendas < 80) {
+    dicas.push("Vendas em bom caminho — teste sugerir um complemento logo após a escolha principal, que costuma ser o momento de maior abertura.");
+  } else {
+    dicas.push("Excelente desempenho em Vendas: você aumentou o ticket sem soar insistente. Compartilhe suas abordagens com o time.");
+  }
+
+  if (i.qualidade < 60) {
+    dicas.push("Atenção à Qualidade: confirme sempre o pedido completo antes de finalizar (itens, quantidade, observação, endereço, pagamento e prazo).");
+  } else if (i.qualidade < 80) {
+    dicas.push("Qualidade consistente — reforce o pós-venda e o acompanhamento em entregas com prazo acima do esperado.");
+  } else {
+    dicas.push("Qualidade no topo: sua conferência de pedido e a condução dos conflitos são referências para o restante da equipe.");
+  }
+
+  if (estado.receita < 60) {
+    dicas.push("Resultado financeiro abaixo do potencial: oportunidades naturais de venda foram perdidas. Reveja os cenários de upselling e cross-selling.");
+  } else if (estado.receita < 120) {
+    dicas.push("Resultado financeiro sólido — há espaço para crescer com sugestões complementares mais frequentes.");
+  } else {
+    dicas.push("Resultado financeiro forte: sua condução aliou experiência e conversão de forma equilibrada.");
+  }
+
+  return dicas;
+}
+
+/* ============================================================
+   ATALHOS DE TECLADO PARA APRESENTAÇÃO
+   ============================================================ */
+document.addEventListener("keydown", function (evento) {
+  if (!document.getElementById("tela-simulador").classList.contains("ativa")) return;
+
+  const botoes = document.querySelectorAll(".opcao:not(:disabled)");
+  if (!botoes.length) return;
+
+  if (evento.key >= "1" && evento.key <= "4") {
+    const idx = Number(evento.key) - 1;
+    if (botoes[idx]) botoes[idx].click();
+  }
+});
+</script>
+</body>
+</html>
